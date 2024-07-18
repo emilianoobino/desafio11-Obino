@@ -22,15 +22,14 @@ const initializePassport = () => {
     // Estrategia JWT para autenticación basada en token
     passport.use("jwt", new JWTStrategy({
         jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
-        secretOrKey: process.env.JWT_SECRET || "coderhouse" // Usar JWT_SECRET del archivo .env
+        secretOrKey: process.env.JWT_SECRET || "coderhouse"
     }, async (jwt_payload, done) => {
         try {
-            // Busca el usuario en la base de datos usando el ID del payload JWT
             const user = await UserModel.findById(jwt_payload.user._id);
             if (!user) {
                 return done(null, false);
             }
-            return done(null, user); // Devuelve el usuario encontrado
+            return done(null, user);
         } catch (error) {
             return done(error);
         }
@@ -41,12 +40,11 @@ const initializePassport = () => {
         passReqToCallback: true,
         usernameField: 'email'
     },  async (req, username, password, done) => {
-        const { first_name, last_name, email, age } = req.body
-        let rol = 'User'
-        const cart = await cartsModel.create({products: []})
+        const { first_name, last_name, email, age } = req.body;
+        let rol = 'User';
         try {
             if(email === "adminCoder@coder.com" && password === "adminCod3r123"){
-                rol = 'Admin'
+                rol = 'Admin';
             }
             if( !first_name || !last_name || !email ) {
                 throw customError.createError({
@@ -54,11 +52,11 @@ const initializePassport = () => {
                     cause: generarInfoError({first_name, last_name, email}),
                     message: "Error al intentar crear un usuario",
                     code: Errors.TYPE_INVALID
-                })
+                });
             }
-            let user = await UserModel.findOne({email})
+            let user = await UserModel.findOne({email});
             if (user) {
-                return done(null, false)
+                return done(null, false);
             }
 
             let newCart = await cartController.createCart();
@@ -69,7 +67,8 @@ const initializePassport = () => {
                 age,
                 password: createHash(password),
                 cart: newCart._id,
-                username: first_name + " " + last_name
+                username: first_name + " " + last_name,
+                role: rol
             };
 
             let result = await UserModel.create(newUser);
@@ -144,5 +143,6 @@ const initializePassport = () => {
 };
 
 export default initializePassport;
+
 
 

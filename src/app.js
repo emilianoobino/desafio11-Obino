@@ -9,7 +9,8 @@ import cors from "cors";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { faker } from '@faker-js/faker';
-import cookieParser from 'cookie-parser'; // Importa cookie-parser
+import cookieParser from 'cookie-parser';
+import authMiddleware from "./middleware/authmiddleware.js";
 
 import productsRouter from "./routes/products.router.js";
 import cartsRouter from "./routes/carts.router.js";
@@ -55,7 +56,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({ credentials: true, origin: 'http://localhost:8080' }));
-app.use(cookieParser()); // Usa cookie-parser
+app.use(cookieParser());
 
 app.get("/loggertest", (req, res) => {
   req.logger.http("Mensaje HTTP"); 
@@ -85,7 +86,11 @@ app.use(session({
 // Passport 
 initializePassport();
 app.use(passport.initialize());
-app.use(passport.session()); 
+app.use(passport.session());
+app.use(cookieParser()); 
+
+// Usa el middleware de autenticación excluyendo rutas /login y /register
+app.use(authMiddleware(['/login', '/register', '/api/users/register', '/api/users/login']));
 
 // Rutas
 app.use("/api/products", productsRouter);
@@ -93,6 +98,11 @@ app.use("/api/carts", cartsRouter);
 app.use("/api/users", userRouter);
 app.use("/", viewsRouter);
 app.use('/checkout', checkoutRouter);
+
+// Ruta para la página de login
+app.get('/login', (req, res) => {
+  res.render('login');
+});
 
 // Iniciar el servidor
 const httpServer = app.listen(PUERTO, () => {
@@ -102,10 +112,9 @@ const httpServer = app.listen(PUERTO, () => {
 // Websockets
 new SocketManager(httpServer);
 
-
-
-
-
-
-
+// Manejo de errores
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 

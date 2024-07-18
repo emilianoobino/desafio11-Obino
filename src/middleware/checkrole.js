@@ -1,18 +1,25 @@
-export default function checkUserRole(allowedRoles) {
-    return function (req, res, next) {
-        // Verifica si el usuario está autenticado
-        if (!req.isAuthenticated()) {
-            return res.status(401).json({ message: "No autorizado" });
-        }
+import jwt from 'jsonwebtoken';
 
-        // Verifica si el rol del usuario está permitido
-        const userRole = req.user.role;
-        if (!allowedRoles.includes(userRole)) {
-            return res.status(403).json({ message: "Acceso denegado" });
-        }
+const checkUserRole = (allowedRoles) => (req, res, next) => {
+    const token = req.cookies.coderCookieToken;
 
-        // Si el rol está permitido, continúa con la siguiente función middleware
-        next();
+    if (token) {
+        jwt.verify(token, 'coderhouse', (err, decoded) => {
+            if (err) {
+                res.status(403).send('Acceso denegado. Token inválido.');
+            } else {
+                const userRole = decoded.user.role;
+                if (allowedRoles.includes(userRole)) {
+                    next();
+                } else {
+                    res.status(403).send('Acceso denegado. No tienes permiso para acceder a esta página.');
+                }
+            }
+        });
+    } else {
+        res.status(403).send('Acceso denegado. Token no proporcionado.');
     }
-}
+};
+
+export default checkUserRole;
 
