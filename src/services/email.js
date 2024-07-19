@@ -6,7 +6,7 @@ class EmailManager {
             service: 'gmail',
             auth: {
                 user: "chaval198678@gmail.com",
-                pass: "norp renb afxw uxyq"
+                pass: "emud itxo icac omvq"
             }
         });
     }
